@@ -25,7 +25,8 @@
         loaiLaoDong: row.querySelector('[data-loai]')?.getAttribute('data-loai') || '',
         giaTri: row.querySelector('[data-gia-tri]')?.getAttribute('data-gia-tri') || '',
         moTa: row.querySelector('[data-mo-ta]')?.getAttribute('data-mo-ta') || '',
-        thoiGian: row.querySelector('[data-thoi-gian]')?.getAttribute('data-thoi-gian') || ''
+        thoiGian: row.querySelector('[data-thoi-gian]')?.getAttribute('data-thoi-gian') || '',
+        soLuongSinhVien: row.querySelector('[data-so-luong-sinh-vien]')?.getAttribute('data-so-luong-sinh-vien') || ''
     }));
 
     const truncateText = (text) => {
@@ -65,7 +66,8 @@
                 row.loaiLaoDong.toLowerCase().includes(searchText) ||
                 row.giaTri.toString().toLowerCase().includes(searchText) ||
                 (row.moTa || '').toLowerCase().includes(searchText) ||
-                row.thoiGian.toLowerCase().includes(searchText)
+                row.thoiGian.toLowerCase().includes(searchText) ||
+                row.soLuongSinhVien.toString().toLowerCase().includes(searchText)
             ) : true;
 
             return matchesDot && matchesKhuVuc && matchesBuoi && matchesLoai && matchesThoiGian && matchesSearch;
@@ -237,8 +239,9 @@
                 const editGiaTri = document.getElementById('editGiaTri');
                 const editMoTa = document.getElementById('editMoTa');
                 const editThoiGian = document.getElementById('editThoiGian');
+                const editSoLuongSinhVien = document.getElementById('editSoLuongSinhVien');
 
-                if (!editID || !editDotLaoDongSelect || !editNgayLaoDongSelect || !editKhuVuc || !editBuoi || !editLoaiLaoDong || !editGiaTri || !editMoTa || !editThoiGian) {
+                if (!editID || !editDotLaoDongSelect || !editNgayLaoDongSelect || !editKhuVuc || !editBuoi || !editLoaiLaoDong || !editGiaTri || !editMoTa || !editThoiGian || !editSoLuongSinhVien) {
                     throw new Error('Một hoặc nhiều phần tử trong form không tồn tại.');
                 }
 
@@ -251,6 +254,7 @@
                 editGiaTri.value = data.GiaTri !== null ? data.GiaTri.toString() : '';
                 editMoTa.value = data.MoTa || '';
                 editThoiGian.value = data.ThoiGian || '';
+                editSoLuongSinhVien.value = data.SoLuongSinhVien !== null ? data.SoLuongSinhVien.toString() : '';
 
                 showAlert('Đã tải dữ liệu để sửa.', 'success');
             })
@@ -334,6 +338,7 @@
                 document.getElementById('detailGiaTri').textContent = data.GiaTri !== null ? data.GiaTri : '';
                 document.getElementById('detailMoTa').textContent = data.MoTa || 'Không có mô tả';
                 document.getElementById('detailThoiGian').textContent = data.ThoiGian || '';
+                document.getElementById('detailSoLuongSinhVien').textContent = data.SoLuongSinhVien !== null ? data.SoLuongSinhVien : '';
 
                 const chiTietModal = new bootstrap.Modal(document.getElementById('chiTietDotLaoDongModal'));
                 chiTietModal.show();
@@ -383,4 +388,93 @@
     if (filterLoaiLaoDong) filterLoaiLaoDong.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
     if (filterThoiGian) filterThoiGian.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
     if (searchInput) searchInput.addEventListener('input', () => { currentPage = 1; displayRows(currentPage); });
+
+    // Xuất ra file Excel với tùy chọn vị trí lưu
+    window.exportToExcel = async function () {
+        try {
+            // Lấy dữ liệu từ bảng
+            const table = document.getElementById('dotLaoDongTable');
+            const rows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+            const data = [];
+
+            // Thêm tiêu đề cột
+            const headers = [
+                'STT',
+                'Đợt Lao Động',
+                'Ngày Lao Động',
+                'Khu Vực',
+                'Buổi',
+                'Loại',
+                'Giá Trị',
+                'Mô Tả',
+                'Thời Gian',
+                'Số lượng sinh viên'
+            ];
+            data.push(headers);
+
+            // Lấy dữ liệu từ các hàng hiển thị
+            rows.forEach(row => {
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+
+                // Bỏ cột "Tác Vụ" (cột cuối)
+                for (let i = 0; i < cells.length - 1; i++) {
+                    rowData.push(cells[i].innerText);
+                }
+                data.push(rowData);
+            });
+
+            // Tạo workbook và worksheet
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'DanhSachDotLaoDong');
+
+            // Tùy chỉnh chiều rộng cột
+            worksheet['!cols'] = [
+                { wch: 5 },   // STT
+                { wch: 15 },  // Đợt Lao Động
+                { wch: 15 },  // Ngày Lao Động
+                { wch: 20 },  // Khu Vực
+                { wch: 10 },  // Buổi
+                { wch: 10 },  // Loại
+                { wch: 10 },  // Giá Trị
+                { wch: 30 },  // Mô Tả
+                { wch: 15 },  // Thời Gian
+                { wch: 15 }   // Số lượng sinh viên
+            ];
+
+            // Chuyển workbook thành binary
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // Kiểm tra hỗ trợ showSaveFilePicker
+            if ('showSaveFilePicker' in window) {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: 'DanhSachDotLaoDong.xlsx',
+                    types: [{
+                        description: 'Excel File',
+                        accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+                    }]
+                });
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                showAlert('File Excel đã được lưu thành công!', 'success');
+            } else {
+                // Phương án dự phòng: Tải file trực tiếp
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'DanhSachDotLaoDong.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showAlert('File Excel đã được tải xuống. Trình duyệt của bạn không hỗ trợ chọn vị trí lưu, file sẽ được lưu vào thư mục mặc định.', 'success');
+            }
+        } catch (error) {
+           
+            showAlert(`Lỗi khi xuất file Excel: Ngắt tải file excel`, 'danger');
+        }
+    };
 });

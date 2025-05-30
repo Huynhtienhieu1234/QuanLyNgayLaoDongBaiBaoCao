@@ -47,7 +47,9 @@ namespace QuanLyNgayLaoDong.Models
         [StringLength(100)]
         public string KhuVuc { get; set; }
 
-        public DateTime? NgayXoa { get; set; }
+        public DateTime? Ngayxoa { get; set; }
+
+        public int? SoLuongSinhVien { get; set; }
 
         public virtual TaiKhoan TaiKhoan { get; set; }
     }

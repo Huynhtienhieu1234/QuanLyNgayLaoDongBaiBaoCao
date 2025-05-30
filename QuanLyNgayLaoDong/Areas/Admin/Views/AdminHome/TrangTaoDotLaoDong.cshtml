@@ -7,7 +7,10 @@
 
 <link href="~/Areas/Admin/Css/taoDotLaoDong.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <script src="~/Areas/Admin/Javascript/TaoDotLaoDong.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <div class="container">
     <h2 class="text-center mb-4" style="font-size: 35px; font-weight: 750; color: #1100ff;">Quản Lý Đợt Lao Động</h2>
 
@@ -23,6 +26,9 @@
     <div class="mb-3 text-end">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#themDotLaoDongModal">
             <i class="fa fa-plus"></i> Thêm đợt lao động
+        </button>
+        <button class="btn btn-success" onclick="exportToExcel()">
+            <i class="fa fa-file-excel"></i> Xuất Excel
         </button>
     </div>
 
@@ -90,6 +96,7 @@
                 <th>Giá trị</th>
                 <th>Mô Tả</th>
                 <th>Thời Gian</th>
+                <th>Số lượng</th>
                 <th class="text-center">Tác Vụ</th>
             </tr>
         </thead>
@@ -108,6 +115,7 @@
                         <td style="text-align: center" data-gia-tri="@item.GiaTri">@item.GiaTri</td>
                         <td data-mo-ta="@item.MoTa">@item.MoTa</td>
                         <td style="text-align: center" data-thoi-gian="@item.ThoiGian">@item.ThoiGian</td>
+                        <td style="text-align: center" data-so-luong-sinh-vien="@item.SoLuongSinhVien">@item.SoLuongSinhVien</td>
                         <td class="text-center">
                             <button class="btn btn-info btn-sm" onclick="viewDetails(@item.ID)">Chi tiết</button>
                             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#suaDotLaoDongModal"
@@ -139,7 +147,6 @@
                     <h5 class="modal-title" id="themDotLaoDongModalLabel" style="text-align: center; font-size: 35px; font-weight: 750; color: #1100ff;">
                         Thêm Đợt Lao Động
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body">
                     @if (ViewBag.Errors != null && ViewBag.Errors.Count > 0)
@@ -213,6 +220,11 @@
                             </select>
                             <div class="invalid-feedback">Vui lòng chọn thời gian.</div>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số lượng sinh viên</label>
+                            <input type="number" step="1" name="SoLuongSinhVien" class="form-control" required />
+                            <div class="invalid-feedback">Vui lòng nhập số lượng sinh viên.</div>
+                        </div>
                         <div class="col-12">
                             <label class="form-label">Mô Tả</label>
                             <textarea name="MoTa" class="form-control"></textarea>
@@ -239,7 +251,6 @@
                     <h5 class="modal-title text-primary fw-bold w-100 text-center" id="suaDotLaoDongModalLabel" style="font-size: 30px;">
                         Sửa Đợt Lao Động
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body">
                     @if (ViewBag.Errors != null && ViewBag.Errors.Count > 0)
@@ -313,6 +324,11 @@
                             </select>
                             <div class="invalid-feedback">Vui lòng chọn thời gian.</div>
                         </div>
+                        <div class="col-md-6">
+                            <label for="editSoLuongSinhVien" class="form-label">Số lượng sinh viên</label>
+                            <input type="number" step="1" name="SoLuongSinhVien" id="editSoLuongSinhVien" class="form-control" required />
+                            <div class="invalid-feedback">Vui lòng nhập số lượng sinh viên.</div>
+                        </div>
                         <div class="col-12">
                             <label for="editMoTa" class="form-label">Mô Tả</label>
                             <textarea name="MoTa" id="editMoTa" class="form-control" rows="3" placeholder="Thêm mô tả nếu cần..."></textarea>
@@ -336,7 +352,6 @@
                 <h5 class="modal-title text-primary fw-bold w-100 text-center" id="chiTietDotLaoDongModalLabel" style="font-size: 30px;">
                     Chi Tiết Đợt Lao Động
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3">
@@ -367,6 +382,10 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Thời Gian:</label>
                         <p id="detailThoiGian"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Số lượng sinh viên:</label>
+                        <p id="detailSoLuongSinhVien"></p>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">Mô Tả:</label>

@@ -189,7 +189,6 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
 
 
 
-
         // Hiển thị danh sách đợt lao động
         public ActionResult TrangTaoDotLaoDong()
         {
@@ -198,16 +197,13 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                 // Lấy danh sách đợt lao động kèm thông tin tài khoản liên quan
                 var list = db.TaoDotNgayLaoDongs
                              .Include(t => t.TaiKhoan)
+                             .Where(t => t.Ngayxoa == null) // Chỉ lấy các bản ghi chưa bị xóa
                              .ToList();
                 return View(list);
             }
         }
 
-
-
-
-
-        //Hàm Tạo mới đợt lao động
+        // Tạo mới đợt lao động
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult TaoMoiDotLaoDong(TaoDotNgayLaoDong model)
@@ -219,7 +215,13 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                 {
                     ModelState.AddModelError("NgayLaoDong", $"Năm không được nhỏ hơn {DateTime.Now.Year}.");
                 }
-                else
+                // Kiểm tra số lượng sinh viên
+                if (model.SoLuongSinhVien < 0)
+                {
+                    ModelState.AddModelError("SoLuongSinhVien", "Số lượng sinh viên không được âm.");
+                }
+
+                if (ModelState.IsValid)
                 {
                     try
                     {
@@ -236,23 +238,26 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                                 }
                                 else
                                 {
-                                    model.NguoiTao = null;
                                     System.Diagnostics.Debug.WriteLine($"Không tìm thấy tài khoản cho username: {username}");
+                                    ModelState.AddModelError("", "Không tìm thấy thông tin tài khoản người dùng.");
                                 }
                             }
                             else
                             {
-                                model.NguoiTao = null;
                                 System.Diagnostics.Debug.WriteLine("Người dùng chưa đăng nhập");
+                                ModelState.AddModelError("", "Vui lòng đăng nhập để thực hiện thao tác này.");
                             }
 
-                            model.NgayTao = DateTime.Now;
-                            model.NgayCapNhat = DateTime.Now;
+                            if (ModelState.IsValid)
+                            {
+                                model.NgayTao = DateTime.Now;
+                                model.NgayCapNhat = DateTime.Now;
 
-                            db.TaoDotNgayLaoDongs.Add(model);
-                            db.SaveChanges();
-                            TempData["SuccessMessage"] = "Thêm đợt lao động thành công!";
-                            return RedirectToAction("TrangTaoDotLaoDong");
+                                db.TaoDotNgayLaoDongs.Add(model);
+                                db.SaveChanges();
+                                TempData["SuccessMessage"] = "Thêm đợt lao động thành công!";
+                                return RedirectToAction("TrangTaoDotLaoDong");
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -272,6 +277,7 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
             {
                 var list = db.TaoDotNgayLaoDongs
                              .Include(t => t.TaiKhoan)
+                             .Where(t => t.Ngayxoa == null)
                              .ToList();
                 ViewBag.TaiKhoans = db.TaiKhoans.ToList();
                 ViewBag.Errors = errors;
@@ -279,15 +285,14 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
             }
         }
 
-        // Hàm sửa đọt lao động
-
+        // Sửa đợt lao động
         [HttpGet]
         public ActionResult ChinhSuaDotLaoDong(int id)
         {
             using (var db = new DB_QLNLD())
             {
                 var dotLaoDong = db.TaoDotNgayLaoDongs.Find(id);
-                if (dotLaoDong == null)
+                if (dotLaoDong == null || dotLaoDong.Ngayxoa != null)
                 {
                     System.Diagnostics.Debug.WriteLine($"Không tìm thấy đợt lao động với ID: {id}");
                     return HttpNotFound();
@@ -302,7 +307,8 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                     $"LoaiLaoDong={dotLaoDong.LoaiLaoDong}, " +
                     $"GiaTri={dotLaoDong.GiaTri}, " +
                     $"MoTa={dotLaoDong.MoTa}, " +
-                    $"ThoiGian={dotLaoDong.ThoiGian}");
+                    $"ThoiGian={dotLaoDong.ThoiGian}, " +
+                    $"SoLuongSinhVien={dotLaoDong.SoLuongSinhVien}");
 
                 // Trả về JSON cho AJAX
                 return Json(new
@@ -315,7 +321,8 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                     GiaTri = dotLaoDong.GiaTri,
                     ThoiGian = dotLaoDong.ThoiGian,
                     MoTa = dotLaoDong.MoTa,
-                    KhuVuc = dotLaoDong.KhuVuc
+                    KhuVuc = dotLaoDong.KhuVuc,
+                    SoLuongSinhVien = dotLaoDong.SoLuongSinhVien
                 }, JsonRequestBehavior.AllowGet);
             }
         }
@@ -326,22 +333,31 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Kiểm tra năm của NgayLaoDong
                 if (model.NgayLaoDong.HasValue && model.NgayLaoDong.Value.Year < DateTime.Now.Year)
                 {
                     ModelState.AddModelError("NgayLaoDong", $"Năm không được nhỏ hơn {DateTime.Now.Year}.");
                 }
-                else
+                // Kiểm tra số lượng sinh viên
+                if (model.SoLuongSinhVien < 0)
+                {
+                    ModelState.AddModelError("SoLuongSinhVien", "Số lượng sinh viên không được âm.");
+                }
+
+                if (ModelState.IsValid)
                 {
                     try
                     {
                         using (var db = new DB_QLNLD())
                         {
                             var dotLaoDong = db.TaoDotNgayLaoDongs.Find(model.ID);
-                            if (dotLaoDong == null)
+                            if (dotLaoDong == null || dotLaoDong.Ngayxoa != null)
                             {
+                                System.Diagnostics.Debug.WriteLine($"Không tìm thấy đợt lao động với ID: {model.ID}");
                                 return HttpNotFound();
                             }
 
+                            // Cập nhật thông tin
                             dotLaoDong.DotLaoDong = model.DotLaoDong;
                             dotLaoDong.NgayLaoDong = model.NgayLaoDong;
                             dotLaoDong.Buoi = model.Buoi;
@@ -350,6 +366,8 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                             dotLaoDong.ThoiGian = model.ThoiGian;
                             dotLaoDong.KhuVuc = model.KhuVuc;
                             dotLaoDong.MoTa = model.MoTa;
+                            dotLaoDong.SoLuongSinhVien = model.SoLuongSinhVien;
+                            dotLaoDong.NgayCapNhat = DateTime.Now;
 
                             db.SaveChanges();
 
@@ -359,29 +377,37 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                     }
                     catch (Exception ex)
                     {
-                        var inner = ex.InnerException?.Message ?? ex.Message;
-                        ModelState.AddModelError("", $"Lỗi khi cập nhật dữ liệu: {inner}");
+                        var innerException = ex.InnerException?.Message ?? ex.Message;
+                        System.Diagnostics.Debug.WriteLine($"Lỗi khi cập nhật dữ liệu: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Inner Exception: {innerException}");
+                        ModelState.AddModelError("", $"Lỗi khi cập nhật dữ liệu: {innerException}");
                     }
                 }
             }
 
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            System.Diagnostics.Debug.WriteLine("Lỗi ModelState: " + string.Join(", ", errors));
             ViewBag.Errors = errors;
+
             using (var db = new DB_QLNLD())
             {
+                var list = db.TaoDotNgayLaoDongs
+                             .Include(t => t.TaiKhoan)
+                             .Where(t => t.Ngayxoa == null)
+                             .ToList();
                 ViewBag.TaiKhoans = db.TaiKhoans.ToList();
-                return View("TrangTaoDotLaoDong", db.TaoDotNgayLaoDongs.ToList());
+                return View("TrangTaoDotLaoDong", list);
             }
         }
-        // Khu Vực dành cho xem chi tiết
 
+        // Xem chi tiết đợt lao động
         [HttpGet]
         public ActionResult ChiTietDotLaoDong(int id)
         {
             using (var db = new DB_QLNLD())
             {
                 var dotLaoDong = db.TaoDotNgayLaoDongs.Find(id);
-                if (dotLaoDong == null)
+                if (dotLaoDong == null || dotLaoDong.Ngayxoa != null)
                 {
                     System.Diagnostics.Debug.WriteLine($"Không tìm thấy đợt lao động với ID: {id}");
                     return HttpNotFound();
@@ -397,14 +423,15 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                     LoaiLaoDong = dotLaoDong.LoaiLaoDong,
                     GiaTri = dotLaoDong.GiaTri,
                     MoTa = dotLaoDong.MoTa,
-                    ThoiGian = dotLaoDong.ThoiGian
+                    ThoiGian = dotLaoDong.ThoiGian,
+                    SoLuongSinhVien = dotLaoDong.SoLuongSinhVien
                 }, JsonRequestBehavior.AllowGet);
             }
         }
 
-        // Khu vực dành cho xóa đợt lao động
-
+        // Xóa đợt lao động (Soft Delete)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult XoaDotLaoDong(int id)
         {
             try
@@ -412,23 +439,45 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                 using (var db = new DB_QLNLD())
                 {
                     var dotLaoDong = db.TaoDotNgayLaoDongs.Find(id);
-                    if (dotLaoDong == null)
+                    if (dotLaoDong == null || dotLaoDong.Ngayxoa != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"Không tìm thấy đợt lao động với ID: {id}");
                         return Json(new { success = false, message = "Không tìm thấy đợt lao động." });
                     }
 
-                    db.TaoDotNgayLaoDongs.Remove(dotLaoDong);
+                    // Kiểm tra quyền truy cập
+                    if (User.Identity.IsAuthenticated)
+                    {
+                        string username = User.Identity.Name;
+                        var taiKhoan = db.TaiKhoans.FirstOrDefault(t => t.username == username);
+                        if (taiKhoan == null || dotLaoDong.NguoiTao != taiKhoan.taikhoan_id)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Người dùng {username} không có quyền xóa đợt lao động ID: {id}");
+                            return Json(new { success = false, message = "Bạn không có quyền xóa đợt lao động này." });
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Người dùng chưa đăng nhập");
+                        return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện thao tác này." });
+                    }
+
+                    // Soft delete bằng cách cập nhật Ngayxoa
+                    dotLaoDong.Ngayxoa = DateTime.Now;
                     db.SaveChanges();
+
                     return Json(new { success = true, message = "Xóa đợt lao động thành công!" });
                 }
             }
             catch (Exception ex)
             {
-                var inner = ex.InnerException?.Message ?? ex.Message;
-                System.Diagnostics.Debug.WriteLine($"Lỗi khi xóa đợt lao động: {inner}");
-                return Json(new { success = false, message = $"Lỗi khi xóa: {inner}" });
+                var innerException = ex.InnerException?.Message ?? ex.Message;
+                System.Diagnostics.Debug.WriteLine($"Lỗi khi xóa đợt lao động: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner Exception: {innerException}");
+                return Json(new { success = false, message = $"Lỗi khi xóa: {innerException}" });
             }
         }
+
 
 
 

@@ -1,0 +1,59 @@
+﻿.table-container {
+    margin: 30px auto;
+    max-width: 95%;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+thead {
+    background-color: #f8f9fa;
+}
+
+th, td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+}
+
+.btn-sm {
+    margin: 2px;
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border: none;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+}

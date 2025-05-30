@@ -68,8 +68,7 @@ public static class EmailHelper
 <body>
     <div class='email-container'>
         <div class='email-header'>
-        <img src='https://i.postimg.cc/cJkLYGQP/Logodaxoanen.png' alt='Logo' class='email-logo' />
-            <h2>Yêu cầu đặt lại mật khẩu</h2>
+<a href=""https://ibb.co/c9hvmzW""><img src=""https://i.ibb.co/PyGYSB2/Logodaxoanen.png"" alt=""Logodaxoanen"" border=""0""></a>            <h2>Yêu cầu đặt lại mật khẩu</h2>
         </div>
         <div class='email-body'>
             <p>Xin chào,</p>

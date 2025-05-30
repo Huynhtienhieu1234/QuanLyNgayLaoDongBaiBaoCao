@@ -99,6 +99,7 @@
     <Content Include="ANH\logo.png" />
     <Content Include="ANH\Logodaxoanen.png" />
     <Content Include="ANH\Nen.png" />
+    <Content Include="Areas\Admin\Css\duyetDangKiLaoDong.css" />
     <Content Include="Areas\Admin\Css\TaiKhoan.css" />
     <Content Include="Areas\Admin\Css\taoDotLaoDong.css" />
     <Content Include="Areas\Admin\Javascript\AdminshareJavaScript.js" />
@@ -179,6 +180,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminHomeController.cs" />
+    <Compile Include="Areas\Admin\Controllers\AdminTaskController.cs" />
     <Compile Include="Areas\LopTruong\LopTruongAreaRegistration.cs" />
     <Compile Include="Areas\QuanLy\QuanLyAreaRegistration.cs" />
     <Compile Include="Areas\SinhVien\Controllers\TrangChuController.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="Controllers\FirstScreenController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="EmailHelper\EmailHelper.cs" />
+    <Compile Include="Models\DuyetDangKyLDViewModel.cs" />
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -237,6 +240,7 @@
     <Content Include="Areas\SinhVien\Views\TrangChu\TrangThongTinSinhVien.cshtml" />
     <Content Include="Areas\Admin\Views\AdminHome\TrangTaiKhoan.cshtml" />
     <Content Include="Areas\Admin\Views\AdminHome\TrangTaoDotLaoDong.cshtml" />
+    <Content Include="Areas\Admin\Views\AdminTask\DuyetLaoDong.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
