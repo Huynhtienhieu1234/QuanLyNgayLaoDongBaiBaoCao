@@ -145,8 +145,6 @@
         <h3 class="detail-header">Chi Tiết Tài Khoản</h3>
         <div class="detail-content">
             <dl class="detail-list">
-                <dt>ID</dt>
-                <dd>@taiKhoanDetail.taikhoan_id</dd>
                 <dt>Tên Tài Khoản</dt>
                 <dd>@taiKhoanDetail.username</dd>
                 <dt>Mật khẩu</dt>
@@ -212,7 +210,7 @@
     <h3 class="form-header">Xác Nhận Xóa Tài Khoản</h3>
     <div class="form-content">
         <p style="text-align:center">Bạn có chắc chắn muốn xóa tài khoản này?</p>
-        <form action="@Url.Action("Delete", "AdminHome")" method="post" class="delete-form">
+        <form action="@Url.Action("XoaDotLaoDong", "AdminHome")" method="post" class="delete-form">
             <input type="hidden" name="id" id="delete-taikhoan-id" />
             <div class="form-actions">
                 <button type="submit" class="btn btn-danger">Xóa</button>
@@ -243,4 +241,4 @@
 <!-- JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="~/Areas/Admin/Javascript/TaiKhoan.js"></script>
+<script src="~/Areas/Admin/Javascript/TaiKhoan.js"></script> 

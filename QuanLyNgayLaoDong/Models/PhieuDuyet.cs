@@ -24,6 +24,8 @@ namespace QuanLyNgayLaoDong.Models
 
         public int? PhieuDangKy { get; set; }
 
+        public string TrangThai { get; set; } 
+
         public virtual PhieuDangKy PhieuDangKy1 { get; set; }
 
         public virtual QuanLy QuanLy { get; set; }

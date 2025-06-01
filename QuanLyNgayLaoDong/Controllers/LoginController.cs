@@ -48,7 +48,7 @@ namespace QuanLyNgayLaoDong.Controllers
                         case "Admin":
                             return RedirectToAction("Index", "AdminHome", new { area = "Admin" });
                         case "QuanLy":
-                            return RedirectToAction("Index", "TrangChu", new { area = "QuanLy" });
+                            return RedirectToAction("Index", "QuanLyHome", new { area = "QuanLy" });
                         case "SinhVien":
                             return RedirectToAction("Index", "TrangChu", new { area = "SinhVien" });
                         case "LopTruong":

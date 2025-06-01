@@ -1,12 +1,19 @@
 namespace QuanLyNgayLaoDong.Models
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("TaoDotNgayLaoDong")]
     public partial class TaoDotNgayLaoDong
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public TaoDotNgayLaoDong()
+        {
+            PhieuDangKys = new HashSet<PhieuDangKy>(); // Kh?i t?o t?p h?p
+        }
+
         public int ID { get; set; }
 
         [StringLength(255)]
@@ -16,10 +23,10 @@ namespace QuanLyNgayLaoDong.Models
         public string MoTa { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime? NgayBatDau { get; set; } // Cho phép NULL
+        public DateTime? NgayBatDau { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime? NgayKetThuc { get; set; } // Cho phép NULL
+        public DateTime? NgayKetThuc { get; set; }
 
         public DateTime? NgayTao { get; set; }
 
@@ -51,6 +58,10 @@ namespace QuanLyNgayLaoDong.Models
 
         public int? SoLuongSinhVien { get; set; }
 
+        public bool? TrangThaiDuyet { get; set; }
         public virtual TaiKhoan TaiKhoan { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<PhieuDangKy> PhieuDangKys { get; set; } // Thêm navigation property
     }
 }

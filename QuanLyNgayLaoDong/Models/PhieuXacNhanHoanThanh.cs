@@ -22,6 +22,10 @@ namespace QuanLyNgayLaoDong.Models
 
         public int? phieuduyet { get; set; }
 
+        public DateTime? ngay_xac_nhan { get; set; }
+
+        public string trang_thai { get; set; }
+
         public int? NguoiXacNhan { get; set; }
 
         public DateTime? ThoiGian { get; set; }

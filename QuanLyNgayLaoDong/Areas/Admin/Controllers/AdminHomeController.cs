@@ -4,8 +4,6 @@ using System.Linq;
 using System.Web.Mvc;
 using System.Data.Entity;
 
-
-
 namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
 {
     [Authorize]
@@ -38,6 +36,15 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
         {
             using (var db = new DB_QLNLD())
             {
+                // Kiểm tra email trùng lặp
+                var existingEmail = db.TaiKhoans
+                    .FirstOrDefault(t => t.email == tk.email && t.deleted_at == null);
+                if (existingEmail != null)
+                {
+                    TempData["Error"] = "Email đã tồn tại. Vui lòng sử dụng email khác.";
+                    return RedirectToAction("TrangTaiKhoan");
+                }
+
                 if (ModelState.IsValid)
                 {
                     // Đặt mật khẩu mặc định nếu không có
@@ -127,6 +134,15 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
             {
                 using (var db = new DB_QLNLD())
                 {
+                    // Kiểm tra email trùng lặp
+                    var existingEmail = db.TaiKhoans
+                        .FirstOrDefault(t => t.email == tk.email && t.taikhoan_id != tk.taikhoan_id && t.deleted_at == null);
+                    if (existingEmail != null)
+                    {
+                        TempData["Error"] = "Email đã tồn tại. Vui lòng sử dụng email khác.";
+                        return RedirectToAction("TrangTaiKhoan");
+                    }
+
                     var existingTaiKhoan = db.TaiKhoans.Find(tk.taikhoan_id);
                     if (existingTaiKhoan != null && existingTaiKhoan.deleted_at == null)
                     {
@@ -181,13 +197,6 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
 
             return RedirectToAction("TrangTaiKhoan");
         }
-
-
-
-
-
-
-
 
         // Hiển thị danh sách đợt lao động
         public ActionResult TrangTaoDotLaoDong()
@@ -431,7 +440,6 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
 
         // Xóa đợt lao động (Soft Delete)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult XoaDotLaoDong(int id)
         {
             try
@@ -477,12 +485,5 @@ namespace QuanLyNgayLaoDong.Areas.Admin.Controllers
                 return Json(new { success = false, message = $"Lỗi khi xóa: {innerException}" });
             }
         }
-
-
-
-
-
-
-
     }
 }

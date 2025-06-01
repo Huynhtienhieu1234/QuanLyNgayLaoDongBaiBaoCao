@@ -99,10 +99,13 @@
     <Content Include="ANH\logo.png" />
     <Content Include="ANH\Logodaxoanen.png" />
     <Content Include="ANH\Nen.png" />
-    <Content Include="Areas\Admin\Css\duyetDangKiLaoDong.css" />
+    <Content Include="Areas\Admin\Css\DuyetDangKiLD.css" />
+    <Content Include="Areas\Admin\Css\QuanLysinhvien.css" />
     <Content Include="Areas\Admin\Css\TaiKhoan.css" />
     <Content Include="Areas\Admin\Css\taoDotLaoDong.css" />
     <Content Include="Areas\Admin\Javascript\AdminshareJavaScript.js" />
+    <Content Include="Areas\Admin\Javascript\DuyetDangKiLD.js" />
+    <Content Include="Areas\Admin\Javascript\QuanLysinhvien.js" />
     <Content Include="Areas\Admin\Javascript\TaiKhoan.js" />
     <Content Include="Areas\Admin\Javascript\TaoDotLaoDong.js" />
     <Content Include="Content\admin\css\AccountManager.css" />
@@ -181,14 +184,20 @@
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminHomeController.cs" />
     <Compile Include="Areas\Admin\Controllers\AdminTaskController.cs" />
+    <Compile Include="Areas\Admin\Controllers\QuanLySinhVienController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ThongKeController.cs" />
+    <Compile Include="Areas\Admin\Controllers\XacNhanHoanThanhLDController.cs" />
+    <Compile Include="Areas\Admin\ViewModel\DotLaoDongViewModel.cs" />
+    <Compile Include="Areas\Admin\ViewModel\SinhVienViewModel.cs" />
     <Compile Include="Areas\LopTruong\LopTruongAreaRegistration.cs" />
+    <Compile Include="Areas\QuanLy\Controllers\QuanLyHomeController.cs" />
     <Compile Include="Areas\QuanLy\QuanLyAreaRegistration.cs" />
     <Compile Include="Areas\SinhVien\Controllers\TrangChuController.cs" />
     <Compile Include="Areas\SinhVien\SinhVienAreaRegistration.cs" />
     <Compile Include="Controllers\FirstScreenController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="EmailHelper\EmailHelper.cs" />
-    <Compile Include="Models\DuyetDangKyLDViewModel.cs" />
+    <Compile Include="Models\DanhSachDiemDanh.cs" />
     <Compile Include="Models\LoginModel.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -241,6 +250,11 @@
     <Content Include="Areas\Admin\Views\AdminHome\TrangTaiKhoan.cshtml" />
     <Content Include="Areas\Admin\Views\AdminHome\TrangTaoDotLaoDong.cshtml" />
     <Content Include="Areas\Admin\Views\AdminTask\DuyetLaoDong.cshtml" />
+    <Content Include="Areas\Admin\Views\QuanLySinhVien\TrangChuSinhVien.cshtml" />
+    <Content Include="Areas\Admin\Views\ThongKe\ThongKeIndex.cshtml" />
+    <Content Include="Areas\Admin\Views\XacNhanHoanThanhLD\XacnhanHoanThanh.cshtml" />
+    <Content Include="Areas\QuanLy\Views\QuanLyHome\Index.cshtml" />
+    <Content Include="Areas\QuanLy\Views\Shared\QL.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
@@ -266,9 +280,7 @@
     <Folder Include="Areas\LopTruong\Controllers\" />
     <Folder Include="Areas\LopTruong\Data\" />
     <Folder Include="Areas\LopTruong\Views\Shared\" />
-    <Folder Include="Areas\QuanLy\Controllers\" />
     <Folder Include="Areas\QuanLy\Data\" />
-    <Folder Include="Areas\QuanLy\Views\Shared\" />
     <Folder Include="Areas\SinhVien\Data\" />
     <Folder Include="Views\FirstScreen\" />
   </ItemGroup>

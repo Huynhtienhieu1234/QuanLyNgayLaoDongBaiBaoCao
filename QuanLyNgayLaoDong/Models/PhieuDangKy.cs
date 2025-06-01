@@ -26,9 +26,14 @@ namespace QuanLyNgayLaoDong.Models
 
         public DateTime? ThoiGian { get; set; }
 
+        public int? DotLaoDongId { get; set; } 
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PhieuDuyet> PhieuDuyets { get; set; }
 
         public virtual SinhVien SinhVien { get; set; }
+
+        [ForeignKey("DotLaoDongId")]
+        public virtual TaoDotNgayLaoDong TaoDotNgayLaoDong { get; set; } 
     }
 }

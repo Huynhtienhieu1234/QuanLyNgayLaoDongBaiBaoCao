@@ -31,7 +31,14 @@ namespace QuanLyNgayLaoDong.Models
         [StringLength(255)]
         public string quequan { get; set; }
 
-        public bool? gioitinh { get; set; }
+
+        [StringLength(100)]
+        public string email { get; set; }
+
+
+        [StringLength(10)]
+        public string gioitinh { get; set; }
+
 
         public int? taikhoan { get; set; }
 

@@ -1,480 +1,223 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
-    const ROWS_PER_PAGE = 5;
-    const MAX_DESC_LENGTH = 20;
+﻿document.addEventListener("DOMContentLoaded", function () {
+    // Tự động ẩn thông báo sau 3 giây
+    setTimeout(function () {
+        document.querySelectorAll(".alert").forEach(function (alert) {
+            alert.style.transition = "opacity 0.5s ease";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 3000);
+
+    const rowsPerPage = 5;
+    const table = document.getElementById("dotLaoDongTable");
+    const tbody = table?.querySelector("tbody");
+    let allRows = tbody ? Array.from(tbody.querySelectorAll("tr")) : [];
+    const pagination = document.getElementById("pagination");
+    const searchInput = document.getElementById("searchInput");
+    const filterDotLaoDong = document.getElementById("filterDotLaoDong");
+    const filterKhuVuc = document.getElementById("filterKhuVuc");
+    const filterBuoi = document.getElementById("filterBuoi");
+    const filterLoaiLaoDong = document.getElementById("filterLoaiLaoDong");
+    const filterThoiGian = document.getElementById("filterThoiGian");
+
     let currentPage = 1;
-    let allRows = [];
 
-    const table = document.getElementById('dotLaoDongTable');
-    const tbody = table?.querySelector('tbody');
-    const rows = tbody ? Array.from(tbody.getElementsByTagName('tr')) : [];
-    const paginationContainer = document.getElementById('pagination');
-    const filterDotLaoDong = document.getElementById('filterDotLaoDong');
-    const filterKhuVuc = document.getElementById('filterKhuVuc');
-    const filterBuoi = document.getElementById('filterBuoi');
-    const filterLoaiLaoDong = document.getElementById('filterLoaiLaoDong');
-    const filterThoiGian = document.getElementById('filterThoiGian');
-    const searchInput = document.getElementById('searchInput');
+    // Chuẩn hóa chuỗi để tìm kiếm không phân biệt dấu và chữ cái
+    function normalize(str) {
+        return str
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+    }
 
-    // Lưu trữ tất cả hàng để lọc và tìm kiếm
-    allRows = rows.map(row => ({
-        element: row,
-        dotLaoDong: row.querySelector('[data-dot]')?.getAttribute('data-dot') || '',
-        ngayLaoDong: row.querySelector('[data-ngay]')?.getAttribute('data-ngay') || '',
-        khuVuc: row.querySelector('[data-khu-vuc]')?.getAttribute('data-khu-vuc') || '',
-        buoi: row.querySelector('[data-buoi]')?.getAttribute('data-buoi') || '',
-        loaiLaoDong: row.querySelector('[data-loai]')?.getAttribute('data-loai') || '',
-        giaTri: row.querySelector('[data-gia-tri]')?.getAttribute('data-gia-tri') || '',
-        moTa: row.querySelector('[data-mo-ta]')?.getAttribute('data-mo-ta') || '',
-        thoiGian: row.querySelector('[data-thoi-gian]')?.getAttribute('data-thoi-gian') || '',
-        soLuongSinhVien: row.querySelector('[data-so-luong-sinh-vien]')?.getAttribute('data-so-luong-sinh-vien') || ''
-    }));
+    // Lọc các hàng dựa trên tiêu chí bộ lọc và tìm kiếm
+    function getFilteredRows() {
+        const keyword = normalize(searchInput?.value || "");
+        const selectedDot = normalize(filterDotLaoDong?.value || "");
+        const selectedKhuVuc = normalize(filterKhuVuc?.value || "");
+        const selectedBuoi = normalize(filterBuoi?.value || "");
+        const selectedLoai = normalize(filterLoaiLaoDong?.value || "");
+        const selectedThoiGian = normalize(filterThoiGian?.value || "");
 
-    const truncateText = (text) => {
-        return text && text.length > MAX_DESC_LENGTH ? text.substring(0, MAX_DESC_LENGTH - 3) + '...' : text || '';
-    };
+        return allRows.filter(row => {
+            const dotLaoDong = normalize(row.querySelector('[data-dot]')?.getAttribute('data-dot') || "");
+            const ngayLaoDong = normalize(row.querySelector('[data-ngay]')?.getAttribute('data-ngay') || "");
+            const khuVuc = normalize(row.querySelector('[data-khu-vuc]')?.getAttribute('data-khu-vuc') || "");
+            const buoi = normalize(row.querySelector('[data-buoi]')?.getAttribute('data-buoi') || "");
+            const loaiLaoDong = normalize(row.querySelector('[data-loai]')?.getAttribute('data-loai') || "");
+            const giaTri = normalize(row.querySelector('[data-gia-tri]')?.getAttribute('data-gia-tri') || "");
+            const moTa = normalize(row.querySelector('[data-mo-ta]')?.getAttribute('data-mo-ta') || "");
+            const thoiGian = normalize(row.querySelector('[data-thoi-gian]')?.getAttribute('data-thoi-gian') || "");
+            const soLuongSinhVien = normalize(row.querySelector('[data-so-luong-sinh-vien]')?.getAttribute('data-so-luong-sinh-vien') || "");
 
-    const showAlert = (message, type = 'success') => {
-        const alertBox = document.createElement('div');
-        alertBox.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
-        alertBox.style.zIndex = 9999;
-        alertBox.style.minWidth = '300px';
-        alertBox.innerHTML = `<strong>${type === 'success' ? '✔️ Thành công!' : '❌ Lỗi!'}</strong> ${message}`;
-        document.body.appendChild(alertBox);
-        setTimeout(() => alertBox.remove(), 3000);
-    };
-
-    const applyFiltersAndSearch = () => {
-        const dotFilter = filterDotLaoDong?.value || '';
-        const khuVucFilter = filterKhuVuc?.value || '';
-        const buoiFilter = filterBuoi?.value || '';
-        const loaiFilter = filterLoaiLaoDong?.value || '';
-        const thoiGianFilter = filterThoiGian?.value || '';
-        const searchText = searchInput?.value.toLowerCase() || '';
-
-        const filteredRows = allRows.filter(row => {
-            const matchesDot = dotFilter ? row.dotLaoDong === dotFilter : true;
-            const matchesKhuVuc = khuVucFilter ? row.khuVuc === khuVucFilter : true;
-            const matchesBuoi = buoiFilter ? row.buoi === buoiFilter : true;
-            const matchesLoai = loaiFilter ? row.loaiLaoDong === loaiFilter : true;
-            const matchesThoiGian = thoiGianFilter ? row.thoiGian === thoiGianFilter : true;
-
-            const matchesSearch = searchText ? (
-                row.dotLaoDong.toLowerCase().includes(searchText) ||
-                row.ngayLaoDong.toLowerCase().includes(searchText) ||
-                row.khuVuc.toLowerCase().includes(searchText) ||
-                row.buoi.toLowerCase().includes(searchText) ||
-                row.loaiLaoDong.toLowerCase().includes(searchText) ||
-                row.giaTri.toString().toLowerCase().includes(searchText) ||
-                (row.moTa || '').toLowerCase().includes(searchText) ||
-                row.thoiGian.toLowerCase().includes(searchText) ||
-                row.soLuongSinhVien.toString().toLowerCase().includes(searchText)
+            const matchesKeyword = keyword ? (
+                dotLaoDong.includes(keyword) ||
+                ngayLaoDong.includes(keyword) ||
+                khuVuc.includes(keyword) ||
+                buoi.includes(keyword) ||
+                loaiLaoDong.includes(keyword) ||
+                giaTri.includes(keyword) ||
+                moTa.includes(keyword) ||
+                thoiGian.includes(keyword) ||
+                soLuongSinhVien.includes(keyword)
             ) : true;
 
-            return matchesDot && matchesKhuVuc && matchesBuoi && matchesLoai && matchesThoiGian && matchesSearch;
+            const matchesDot = selectedDot ? dotLaoDong.includes(selectedDot) : true;
+            const matchesKhuVuc = selectedKhuVuc ? khuVuc.includes(selectedKhuVuc) : true;
+            const matchesBuoi = selectedBuoi ? buoi.includes(selectedBuoi) : true;
+            const matchesLoai = selectedLoai ? loaiLaoDong.includes(selectedLoai) : true;
+            const matchesThoiGian = selectedThoiGian ? thoiGian.includes(selectedThoiGian) : true;
+
+            return matchesKeyword && matchesDot && matchesKhuVuc && matchesBuoi && matchesLoai && matchesThoiGian;
         });
+    }
 
-        return filteredRows.map(row => row.element);
-    };
+    // Cập nhật số thứ tự (STT) cho các hàng hiển thị
+    function updateSTT(filteredRows) {
+        filteredRows.forEach((row, index) => {
+            row.children[0].textContent = index + 1 + (currentPage - 1) * rowsPerPage;
+        });
+    }
 
-    const displayRows = (page) => {
-        const filteredRows = applyFiltersAndSearch();
-        const start = (page - 1) * ROWS_PER_PAGE;
-        const end = start + ROWS_PER_PAGE;
+    // Hiển thị trang cụ thể
+    function showPage(page, filteredRows) {
+        currentPage = page;
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
 
-        rows.forEach(row => row.style.display = 'none');
-        filteredRows.slice(start, end).forEach(row => {
-            const descCell = row.cells[7];
-            if (descCell) {
-                if (!descCell.dataset.original) {
-                    descCell.dataset.original = descCell.textContent;
-                }
-                descCell.textContent = truncateText(descCell.dataset.original);
+        allRows.forEach(row => row.style.display = "none");
+        const visibleRows = filteredRows.slice(start, end);
+        visibleRows.forEach(row => row.style.display = "");
+
+        updateSTT(visibleRows);
+        renderPagination(filteredRows.length);
+    }
+
+    // Render phân trang
+    function renderPagination(totalItems) {
+        if (!pagination) return;
+        const totalPages = Math.ceil(totalItems / rowsPerPage);
+        pagination.innerHTML = "";
+
+        const prev = document.createElement("li");
+        prev.className = "page-item" + (currentPage === 1 ? " disabled" : "");
+        prev.innerHTML = `<a class="page-link" href="#">←</a>`;
+        prev.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage, getFilteredRows());
             }
-            row.style.display = '';
         });
-
-        updatePagination(filteredRows);
-    };
-
-    const updatePagination = (filteredRows) => {
-        if (!paginationContainer) return;
-        const totalPages = Math.ceil(filteredRows.length / ROWS_PER_PAGE);
-        paginationContainer.innerHTML = '';
-
-        const createPageItem = (label, disabled, onClick) => {
-            const li = document.createElement('li');
-            li.className = `page-item ${disabled ? 'disabled' : ''}`;
-            li.innerHTML = `<a class="page-link" href="#">${label}</a>`;
-            li.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!disabled) onClick();
-            });
-            return li;
-        };
-
-        paginationContainer.appendChild(createPageItem('«', currentPage === 1, () => {
-            currentPage--;
-            displayRows(currentPage);
-        }));
+        pagination.appendChild(prev);
 
         for (let i = 1; i <= totalPages; i++) {
-            const li = createPageItem(i, false, () => {
+            const li = document.createElement("li");
+            li.className = "page-item" + (i === currentPage ? " active" : "");
+            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+            li.addEventListener("click", (e) => {
+                e.preventDefault();
                 currentPage = i;
-                displayRows(currentPage);
+                showPage(currentPage, getFilteredRows());
             });
-            if (i === currentPage) li.classList.add('active');
-            paginationContainer.appendChild(li);
+            pagination.appendChild(li);
         }
 
-        paginationContainer.appendChild(createPageItem('»', currentPage === totalPages, () => {
-            currentPage++;
-            displayRows(currentPage);
-        }));
-    };
-
-    if (rows.length > 0 && table && tbody && paginationContainer) {
-        displayRows(currentPage);
-    } else if (paginationContainer) {
-        paginationContainer.innerHTML = '';
-    }
-
-    const populateDays = (monthSelect, daySelect, selectedDate) => {
-        const selectedMonthText = monthSelect.value;
-        daySelect.innerHTML = '<option value="">-- Chọn ngày lao động --</option>';
-
-        if (selectedMonthText) {
-            const currentYear = new Date().getFullYear();
-            const selectedMonth = parseInt(selectedMonthText.replace('Tháng ', ''), 10) - 1;
-            const daysInMonth = new Date(currentYear, selectedMonth + 1, 0).getDate();
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const formattedDate = `${currentYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const option = document.createElement('option');
-                option.value = formattedDate;
-                option.textContent = `${String(day).padStart(2, '0')}/${String(selectedMonth + 1).padStart(2, '0')}/${currentYear}`;
-                daySelect.appendChild(option);
-            }
-
-            if (selectedDate) {
-                daySelect.value = selectedDate;
-                if (!daySelect.value) {
-                    console.warn(`Ngày ${selectedDate} không tồn tại trong danh sách ngày của tháng ${selectedMonthText}.`);
-                    showAlert(`Ngày lao động ${selectedDate} không hợp lệ cho tháng ${selectedMonthText}. Vui lòng chọn lại.`, 'danger');
-                }
-            }
-        }
-    };
-
-    const modal = document.getElementById('themDotLaoDongModal');
-    if (modal) {
-        modal.addEventListener('shown.bs.modal', () => {
-            const dotLaoDongSelect = document.getElementById('DotLaoDong');
-            const ngayLaoDongSelect = document.getElementById('NgayLaoDong');
-            const currentYear = new Date().getFullYear();
-
-            if (!dotLaoDongSelect || !ngayLaoDongSelect) return;
-
-            dotLaoDongSelect.addEventListener('change', () => {
-                populateDays(dotLaoDongSelect, ngayLaoDongSelect);
-            });
-
-            ngayLaoDongSelect.addEventListener('change', () => {
-                const selectedDate = new Date(ngayLaoDongSelect.value);
-                if (ngayLaoDongSelect.value && selectedDate.getFullYear() < currentYear) {
-                    ngayLaoDongSelect.setCustomValidity(`Năm không được nhỏ hơn ${currentYear}.`);
-                    ngayLaoDongSelect.classList.add('is-invalid');
-                    showAlert('Ngày không hợp lệ.', 'danger');
-                } else {
-                    ngayLaoDongSelect.setCustomValidity('');
-                    ngayLaoDongSelect.classList.remove('is-invalid');
-                    showAlert('Ngày lao động hợp lệ!', 'success');
-                }
-            });
-
-            const form = modal.querySelector('.needs-validation');
-            if (form) {
-                form.addEventListener('submit', (event) => {
-                    const ngayLaoDongInput = form.querySelector('#NgayLaoDong');
-                    const selectedDate = new Date(ngayLaoDongInput.value);
-
-                    if (ngayLaoDongInput.value && selectedDate.getFullYear() < currentYear) {
-                        ngayLaoDongInput.setCustomValidity(`Năm không được nhỏ hơn ${currentYear}.`);
-                        ngayLaoDongInput.classList.add('is-invalid');
-                        showAlert('Ngày không hợp lệ.', 'danger');
-                    } else {
-                        ngayLaoDongInput.setCustomValidity('');
-                        ngayLaoDongInput.classList.remove('is-invalid');
-                    }
-
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        showAlert('Gửi biểu mẫu thành công!', 'success');
-                    }
-                    form.classList.add('was-validated');
-                }, false);
+        const next = document.createElement("li");
+        next.className = "page-item" + (currentPage === totalPages ? " disabled" : "");
+        next.innerHTML = `<a class="page-link" href="#">→</a>`;
+        next.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage, getFilteredRows());
             }
         });
+        pagination.appendChild(next);
     }
 
-    window.fillEditForm = function (id) {
-        fetch(`/Admin/AdminHome/ChinhSuaDotLaoDong?id=${id}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Dữ liệu trả về từ server:', data);
-
-                const editID = document.getElementById('editID');
-                const editDotLaoDongSelect = document.getElementById('editDotLaoDong');
-                const editNgayLaoDongSelect = document.getElementById('editNgayLaoDong');
-                const editKhuVuc = document.getElementById('editKhuVuc');
-                const editBuoi = document.getElementById('editBuoi');
-                const editLoaiLaoDong = document.getElementById('editLoaiLaoDong');
-                const editGiaTri = document.getElementById('editGiaTri');
-                const editMoTa = document.getElementById('editMoTa');
-                const editThoiGian = document.getElementById('editThoiGian');
-                const editSoLuongSinhVien = document.getElementById('editSoLuongSinhVien');
-
-                if (!editID || !editDotLaoDongSelect || !editNgayLaoDongSelect || !editKhuVuc || !editBuoi || !editLoaiLaoDong || !editGiaTri || !editMoTa || !editThoiGian || !editSoLuongSinhVien) {
-                    throw new Error('Một hoặc nhiều phần tử trong form không tồn tại.');
-                }
-
-                editID.value = data.ID || '';
-                editDotLaoDongSelect.value = data.DotLaoDong || '';
-                populateDays(editDotLaoDongSelect, editNgayLaoDongSelect, data.NgayLaoDong || '');
-                editKhuVuc.value = data.KhuVuc || '';
-                editBuoi.value = data.Buoi || '';
-                editLoaiLaoDong.value = data.LoaiLaoDong || '';
-                editGiaTri.value = data.GiaTri !== null ? data.GiaTri.toString() : '';
-                editMoTa.value = data.MoTa || '';
-                editThoiGian.value = data.ThoiGian || '';
-                editSoLuongSinhVien.value = data.SoLuongSinhVien !== null ? data.SoLuongSinhVien.toString() : '';
-
-                showAlert('Đã tải dữ liệu để sửa.', 'success');
-            })
-            .catch(error => {
-                console.error('Lỗi khi tải dữ liệu:', error);
-                showAlert(`Lỗi khi tải dữ liệu: ${error.message}`, 'danger');
-            });
-    };
-
-    const editModal = document.getElementById('suaDotLaoDongModal');
-    if (editModal) {
-        editModal.addEventListener('shown.bs.modal', () => {
-            const editDotLaoDongSelect = document.getElementById('editDotLaoDong');
-            const editNgayLaoDongSelect = document.getElementById('editNgayLaoDong');
-            const currentYear = new Date().getFullYear();
-
-            if (!editDotLaoDongSelect || !editNgayLaoDongSelect) return;
-
-            editDotLaoDongSelect.addEventListener('change', () => {
-                populateDays(editDotLaoDongSelect, editNgayLaoDongSelect);
-            });
-
-            editNgayLaoDongSelect.addEventListener('change', () => {
-                const selectedDate = new Date(editNgayLaoDongSelect.value);
-                if (editNgayLaoDongSelect.value && selectedDate.getFullYear() < currentYear) {
-                    editNgayLaoDongSelect.setCustomValidity(`Năm không được nhỏ hơn ${currentYear}.`);
-                    editNgayLaoDongSelect.classList.add('is-invalid');
-                    showAlert('Ngày không hợp lệ.', 'danger');
-                } else {
-                    editNgayLaoDongSelect.setCustomValidity('');
-                    editNgayLaoDongSelect.classList.remove('is-invalid');
-                    showAlert('Ngày lao động hợp lệ!', 'success');
-                }
-            });
-
-            const editForm = editModal.querySelector('.needs-validation');
-            if (editForm) {
-                editForm.addEventListener('submit', (event) => {
-                    const ngayLaoDongInput = editForm.querySelector('#editNgayLaoDong');
-                    const selectedDate = new Date(ngayLaoDongInput.value);
-
-                    if (ngayLaoDongInput.value && selectedDate.getFullYear() < currentYear) {
-                        ngayLaoDongInput.setCustomValidity(`Năm không được nhỏ hơn ${currentYear}.`);
-                        ngayLaoDongInput.classList.add('is-invalid');
-                        showAlert('Ngày không hợp lệ.', 'danger');
-                    } else {
-                        ngayLaoDongInput.setCustomValidity('');
-                        ngayLaoDongInput.classList.remove('is-invalid');
-                    }
-
-                    if (!editForm.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        const formData = new FormData(editForm);
-                        console.log('Dữ liệu gửi đi:', Object.fromEntries(formData));
-                        showAlert('Gửi biểu mẫu thành công!', 'success');
-                    }
-                    editForm.classList.add('was-validated');
-                }, false);
-            }
-        });
-    }
-
-    // Xử lý nút "Xem Chi Tiết"
-    window.viewDetails = function (id) {
-        fetch(`/Admin/AdminHome/ChiTietDotLaoDong?id=${id}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById('detailDotLaoDong').textContent = data.DotLaoDong || '';
-                document.getElementById('detailNgayLaoDong').textContent = data.NgayLaoDong || '';
-                document.getElementById('detailKhuVuc').textContent = data.KhuVuc || '';
-                document.getElementById('detailBuoi').textContent = data.Buoi || '';
-                document.getElementById('detailLoaiLaoDong').textContent = data.LoaiLaoDong || '';
-                document.getElementById('detailGiaTri').textContent = data.GiaTri !== null ? data.GiaTri : '';
-                document.getElementById('detailMoTa').textContent = data.MoTa || 'Không có mô tả';
-                document.getElementById('detailThoiGian').textContent = data.ThoiGian || '';
-                document.getElementById('detailSoLuongSinhVien').textContent = data.SoLuongSinhVien !== null ? data.SoLuongSinhVien : '';
-
-                const chiTietModal = new bootstrap.Modal(document.getElementById('chiTietDotLaoDongModal'));
-                chiTietModal.show();
-            })
-            .catch(error => {
-                console.error('Lỗi khi tải chi tiết:', error);
-                showAlert(`Lỗi khi tải chi tiết: ${error.message}`, 'danger');
-            });
-    };
-
-    // Xử lý nút "Xóa"
-    window.deleteDotLaoDong = function (id) {
-        if (confirm('Bạn có chắc chắn muốn xóa đợt lao động này?')) {
-            fetch(`/Admin/AdminHome/XoaDotLaoDong?id=${id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const row = document.querySelector(`tr[data-id="${id}"]`);
-                        if (row) {
-                            row.remove();
-                            allRows = allRows.filter(r => r.element.getAttribute('data-id') !== id.toString());
-                            currentPage = 1;
-                            displayRows(currentPage);
-                        }
-                        showAlert(data.message, 'success');
-                    } else {
-                        showAlert(data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi xóa:', error);
-                    showAlert(`Lỗi khi xóa: ${error.message}`, 'danger');
-                });
-        }
-    };
-
-    // Xử lý lọc và tìm kiếm
-    if (filterDotLaoDong) filterDotLaoDong.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
-    if (filterKhuVuc) filterKhuVuc.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
-    if (filterBuoi) filterBuoi.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
-    if (filterLoaiLaoDong) filterLoaiLaoDong.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
-    if (filterThoiGian) filterThoiGian.addEventListener('change', () => { currentPage = 1; displayRows(currentPage); });
-    if (searchInput) searchInput.addEventListener('input', () => { currentPage = 1; displayRows(currentPage); });
-
-    // Xuất ra file Excel với tùy chọn vị trí lưu
+    // Xuất file Excel với tất cả dữ liệu
     window.exportToExcel = async function () {
         try {
-            // Lấy dữ liệu từ bảng
-            const table = document.getElementById('dotLaoDongTable');
-            const rows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
-            const data = [];
+            // Lấy tất cả các dòng (kể cả đang bị ẩn)
+            const allRows = Array.from(document.querySelectorAll("#dotLaoDongTable tbody tr"));
 
-            // Thêm tiêu đề cột
-            const headers = [
-                'STT',
-                'Đợt Lao Động',
-                'Ngày Lao Động',
-                'Khu Vực',
-                'Buổi',
-                'Loại',
-                'Giá Trị',
-                'Mô Tả',
-                'Thời Gian',
-                'Số lượng sinh viên'
-            ];
-            data.push(headers);
+            const headers = Array.from(document.querySelectorAll("#dotLaoDongTable thead th"))
+                .map(th => th.textContent.trim())
+                .filter((_, index) => index !== 10); // Loại bỏ cột "Tác Vụ"
 
-            // Lấy dữ liệu từ các hàng hiển thị
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td');
-
-                // Bỏ cột "Tác Vụ" (cột cuối)
-                for (let i = 0; i < cells.length - 1; i++) {
-                    rowData.push(cells[i].innerText);
-                }
-                data.push(rowData);
+            const data = allRows.map(row => {
+                return Array.from(row.children)
+                    .filter((_, index) => index !== 10)
+                    .map(cell => cell.textContent.trim());
             });
 
-            // Tạo workbook và worksheet
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'DanhSachDotLaoDong');
+            const sheetData = [headers, ...data];
 
-            // Tùy chỉnh chiều rộng cột
-            worksheet['!cols'] = [
-                { wch: 5 },   // STT
-                { wch: 15 },  // Đợt Lao Động
-                { wch: 15 },  // Ngày Lao Động
-                { wch: 20 },  // Khu Vực
-                { wch: 10 },  // Buổi
-                { wch: 10 },  // Loại
-                { wch: 10 },  // Giá Trị
-                { wch: 30 },  // Mô Tả
-                { wch: 15 },  // Thời Gian
-                { wch: 15 }   // Số lượng sinh viên
-            ];
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "DanhSachDotLaoDong");
 
-            // Chuyển workbook thành binary
-            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
 
-            // Kiểm tra hỗ trợ showSaveFilePicker
-            if ('showSaveFilePicker' in window) {
-                const fileHandle = await window.showSaveFilePicker({
+            if (window.showSaveFilePicker) {
+                const handle = await window.showSaveFilePicker({
                     suggestedName: 'DanhSachDotLaoDong.xlsx',
                     types: [{
-                        description: 'Excel File',
-                        accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+                        description: 'Excel Files',
+                        accept: {
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                        }
                     }]
                 });
-                const writable = await fileHandle.createWritable();
+                const writable = await handle.createWritable();
                 await writable.write(blob);
                 await writable.close();
-                showAlert('File Excel đã được lưu thành công!', 'success');
             } else {
-                // Phương án dự phòng: Tải file trực tiếp
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'DanhSachDotLaoDong.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showAlert('File Excel đã được tải xuống. Trình duyệt của bạn không hỗ trợ chọn vị trí lưu, file sẽ được lưu vào thư mục mặc định.', 'success');
+                saveAs(blob, 'DanhSachDotLaoDong.xlsx');
             }
+
+            // Thông báo thành công
+            const notificationContainer = document.createElement('div');
+            notificationContainer.className = 'alert alert-success';
+            notificationContainer.style.cssText = 'text-align: center; margin-bottom: 10px;';
+            notificationContainer.textContent = 'Đã tải file Excel thành công!';
+            document.querySelector('h2').insertAdjacentElement('afterend', notificationContainer);
+
+            setTimeout(() => {
+                notificationContainer.style.transition = 'opacity 0.5s ease';
+                notificationContainer.style.opacity = '0';
+                setTimeout(() => notificationContainer.remove(), 500);
+            }, 3000);
+
         } catch (error) {
-           
-            showAlert(`Lỗi khi xuất file Excel: Ngắt tải file excel`, 'danger');
+            console.error('Lỗi khi xuất file Excel:', error);
+            const errorContainer = document.createElement('div');
+            errorContainer.className = 'alert alert-danger';
+            errorContainer.style.cssText = 'text-align: center; margin-bottom: 10px;';
+            errorContainer.textContent = 'Đã ngắt xuất file';
+            document.querySelector('h2').insertAdjacentElement('afterend', errorContainer);
+
+            setTimeout(() => {
+                errorContainer.style.transition = 'opacity 0.5s ease';
+                errorContainer.style.opacity = '0';
+                setTimeout(() => errorContainer.remove(), 500);
+            }, 3000);
         }
     };
+
+    // Xử lý sự kiện lọc và tìm kiếm
+    if (searchInput) searchInput.addEventListener("input", () => showPage(1, getFilteredRows()));
+    if (filterDotLaoDong) filterDotLaoDong.addEventListener("change", () => showPage(1, getFilteredRows()));
+    if (filterKhuVuc) filterKhuVuc.addEventListener("change", () => showPage(1, getFilteredRows()));
+    if (filterBuoi) filterBuoi.addEventListener("change", () => showPage(1, getFilteredRows()));
+    if (filterLoaiLaoDong) filterLoaiLaoDong.addEventListener("change", () => showPage(1, getFilteredRows()));
+    if (filterThoiGian) filterThoiGian.addEventListener("change", () => showPage(1, getFilteredRows()));
+
+    // Khởi tạo trang đầu tiên
+    if (table && tbody && pagination) {
+        showPage(1, getFilteredRows());
+    }
 });
